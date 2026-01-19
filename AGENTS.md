@@ -41,3 +41,18 @@ npm run dev
 - Memory persists via git history, `progress.txt`, and `prd.json`
 - Stories should be small enough to complete in one context window
 - Always update AGENTS.md with discovered patterns for future iterations
+
+## Documentation Conventions
+
+### Metrics Documentation Format
+
+When documenting metrics, use a bulleted sub-list under each metric with the following structure:
+
+```markdown
+**Metric Name**
+- **What it measures:** Brief description
+- **Better values:** High / Low / Optimal range
+- **Indicates:** What the metric reveals about the system
+- **Related metrics:** Cross-references to paired metrics (if any)
+- **Recommended Action:** What to do when out of range
+```
