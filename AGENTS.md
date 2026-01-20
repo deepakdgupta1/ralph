@@ -39,7 +39,10 @@ npm run dev
 
 - Each iteration spawns a fresh Amp instance with clean context
 - Memory persists via git history, `progress.txt`, and `prd.json`
+- Cross-iteration scratchpad lives in `.agent/scratchpad.md` (local, ignored by git)
 - Stories should be small enough to complete in one context window
+- Default safety/backpressure is controlled via env vars (`RALPH_MODE`, `RALPH_AUTO_APPROVE`, `RALPH_HUMANS_WRITE_TESTS`)
+- Git safety hooks live in `hooks/` (install with `./hooks/install.sh`, use `./hooks/safe-rm` for TRASH deletes)
 - Always update AGENTS.md with discovered patterns for future iterations
 
 ## Documentation Conventions

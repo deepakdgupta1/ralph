@@ -2,6 +2,10 @@
 prd.json
 progress.txt
 .last-branch
+.agent/scratchpad.md
+.agent/last-session
+.agent/worktrees/
+TRASH/
 
 # Archive is optional to commit
 # archive/

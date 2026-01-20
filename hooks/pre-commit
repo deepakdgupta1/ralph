@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Ralph safety hook (git pre-commit).
+# Bypass with: RALPH_HOOKS_BYPASS=1 git commit ...
+
+if [ "${RALPH_HOOKS_BYPASS:-0}" = "1" ]; then
+  exit 0
+fi
+
+echo "🛡️ Ralph pre-commit safety checks..."
+
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+  echo "❌ Not a git repository."
+  exit 1
+fi
+
+if git diff --cached --quiet; then
+  exit 0
+fi
+
+FAIL=0
+
+is_test_file() {
+  local path="$1"
+  case "$path" in
+    test/*|tests/*|*/__tests__/*|*/*.test.*|*/*.spec.*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+is_sensitive_file() {
+  local path="$1"
+  case "$path" in
+    .env|.env.*|*/.env|*/.env.*|*.pem|*.key|*.p12|*.pfx|*id_rsa*|*id_ed25519*|*credentials*|*secrets*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# 1) Deletion protection: require TRASH/ instead of git deletions.
+while IFS= read -r -d '' deleted_path; do
+  if [ -z "$deleted_path" ]; then
+    continue
+  fi
+
+  case "$deleted_path" in
+    TRASH/*) ;;
+    *)
+      echo "❌ Deletion blocked: $deleted_path"
+      echo "   Move files into TRASH/ instead of deleting."
+      FAIL=1
+      ;;
+  esac
+done < <(git diff --cached --name-only --diff-filter=D -z)
+
+# 2) Env / secrets protection.
+while IFS= read -r -d '' staged_path; do
+  if [ -z "$staged_path" ]; then
+    continue
+  fi
+
+  if is_sensitive_file "$staged_path"; then
+    echo "❌ Sensitive file blocked: $staged_path"
+    FAIL=1
+  fi
+
+  if [ "${RALPH_HUMANS_WRITE_TESTS:-0}" = "1" ] && is_test_file "$staged_path"; then
+    echo "❌ Test edit blocked (Humans Write Tests): $staged_path"
+    FAIL=1
+  fi
+done < <(git diff --cached --name-only -z)
+
+# 3) Large diff protection (default: 500 lines changed per file).
+MAX_CHANGED_LINES="${RALPH_MAX_CHANGED_LINES:-500}"
+if [ "${RALPH_ALLOW_LARGE_DIFF:-0}" != "1" ]; then
+  while IFS=$'\t' read -r added deleted path; do
+    if [ -z "${path:-}" ]; then
+      continue
+    fi
+
+    # Binary diffs show '-' for added/deleted.
+    if [ "$added" = "-" ] || [ "$deleted" = "-" ]; then
+      echo "❌ Binary file change blocked (set RALPH_ALLOW_LARGE_DIFF=1 to override): $path"
+      FAIL=1
+      continue
+    fi
+
+    changed=$((added + deleted))
+    if [ "$changed" -gt "$MAX_CHANGED_LINES" ]; then
+      echo "❌ Large diff blocked ($changed lines changed > $MAX_CHANGED_LINES): $path"
+      echo "   Override with RALPH_ALLOW_LARGE_DIFF=1"
+      FAIL=1
+    fi
+  done < <(git diff --cached --numstat)
+fi
+
+if [ "$FAIL" -ne 0 ]; then
+  echo "❌ Ralph pre-commit checks failed."
+  exit 1
+fi
+
+echo "✅ Ralph pre-commit checks passed."

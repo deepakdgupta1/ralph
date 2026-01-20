@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+TRASH_DIR="${RALPH_TRASH_DIR:-TRASH}"
+
+if [ "$#" -lt 1 ]; then
+  echo "Usage: $0 <path> [path...]"
+  exit 1
+fi
+
+mkdir -p "$TRASH_DIR"
+STAMP="$(date +%Y%m%d-%H%M%S)"
+
+for path in "$@"; do
+  if [ ! -e "$path" ]; then
+    echo "Skipping missing path: $path"
+    continue
+  fi
+
+  base="$(basename "$path")"
+  dest="$TRASH_DIR/$STAMP-$base"
+  mv "$path" "$dest"
+  echo "Moved to TRASH: $path -> $dest"
+done

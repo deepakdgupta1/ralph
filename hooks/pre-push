@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Ralph branch-discipline hook (git pre-push).
+# Bypass with: RALPH_HOOKS_BYPASS=1 git push ...
+
+if [ "${RALPH_HOOKS_BYPASS:-0}" = "1" ]; then
+  exit 0
+fi
+
+ROOT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+if [ -z "$ROOT_DIR" ]; then
+  exit 0
+fi
+
+PRD_FILE="$ROOT_DIR/prd.json"
+if [ ! -f "$PRD_FILE" ]; then
+  exit 0
+fi
+
+EXPECTED_BRANCH="$(jq -r '.branchName // empty' "$PRD_FILE" 2>/dev/null || true)"
+if [ -z "$EXPECTED_BRANCH" ]; then
+  exit 0
+fi
+
+CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+if [ -z "$CURRENT_BRANCH" ]; then
+  exit 0
+fi
+
+if [ "$CURRENT_BRANCH" != "$EXPECTED_BRANCH" ]; then
+  echo "❌ Push blocked: current branch '$CURRENT_BRANCH' does not match prd.json.branchName '$EXPECTED_BRANCH'"
+  exit 1
+fi
