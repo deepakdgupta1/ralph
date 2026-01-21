@@ -3,17 +3,28 @@
 ![Ralph](ralph.webp)
 
 Ralph is an autonomous AI agent loop that runs
-[Amp](https://ampcode.com) repeatedly until all PRD items are complete.
-Each iteration is a fresh Amp instance with clean context.
+an AI coding agent repeatedly until all PRD items are complete.
+Each iteration is a fresh agent instance with clean context.
 Memory persists via git history, `progress.txt`, and `prd.json`.
 
 Based on [Geoffrey Huntley's Ralph pattern](https://ghuntley.com/ralph/).
 
 [Read my in-depth article on how I use Ralph](https://x.com/ryancarson/status/2008548371712135632)
 
+## Supported Providers
+
+| Provider | Command | Selection |
+|----------|---------|----------|
+| AMP (default) | `amp` | `RALPH_PROVIDER=amp` |
+| Claude Code | `claude` | `RALPH_PROVIDER=claude-code` |
+| Antigravity | `antigravity` | `RALPH_PROVIDER=antigravity` |
+| CODEX | `codex` | `RALPH_PROVIDER=codex` |
+
+Provider configurations are defined in `config/providers.json`.
+
 ## Prerequisites
 
-- [Amp CLI](https://ampcode.com) installed and authenticated
+- One of the supported AI CLI tools installed and authenticated
 - `jq` installed (`brew install jq` on macOS)
 - A git repository for your project
 
@@ -52,6 +63,23 @@ Add to `~/.config/amp/settings.json`:
 
 This enables automatic handoff when context fills up,
 allowing Ralph to handle large stories that exceed a single context window.
+
+> **Note**: Auto-handoff configuration varies by provider. Check your provider's documentation for equivalent settings.
+
+### Select a Provider
+
+By default, Ralph uses AMP. To use a different provider:
+
+```bash
+# Use Claude Code
+RALPH_PROVIDER=claude-code ./ralph.sh 10
+
+# Use Antigravity
+RALPH_PROVIDER=antigravity ./ralph.sh 10
+
+# Use CODEX
+RALPH_PROVIDER=codex ./ralph.sh 10
+```
 
 ## Workflow
 
@@ -98,8 +126,10 @@ Ralph will:
 
 | File | Purpose |
 | ------ | --------- |
-| `ralph.sh` | The bash loop that spawns fresh Amp instances |
-| `prompt.md` | Instructions given to each Amp instance |
+| `ralph.sh` | The bash loop that spawns fresh agent instances |
+| `prompt.md` | Instructions given to each agent instance |
+| `config/providers.json` | Provider definitions (commands, flags) |
+| `config/ralph.config.sh` | Configuration loader script |
 | `prd.json` | User stories with `passes` status (the task list) |
 | `prd.json.example` | Example PRD format for reference |
 | `progress.txt` | Append-only learnings for future iterations |
@@ -130,7 +160,7 @@ npm run dev
 
 ### Each Iteration = Fresh Context
 
-Each iteration spawns a **new Amp instance** with clean context.
+Each iteration spawns a **new agent instance** with clean context.
 The only memory between iterations is:
 
 - Git history (commits from previous iterations)
@@ -158,7 +188,7 @@ Too big (split these):
 ### AGENTS.md Updates Are Critical
 
 After each iteration, Ralph updates the relevant `AGENTS.md` files with learnings.
-This is key because Amp automatically reads these files,
+This is key because agents automatically read these files,
 so future iterations (and future human developers) benefit from discovered patterns, gotchas, and conventions.
 
 Examples of what to add to AGENTS.md:
@@ -217,4 +247,6 @@ Archives are saved to `archive/YYYY-MM-DD-feature-name/`.
 ## References
 
 - [Geoffrey Huntley's Ralph article](https://ghuntley.com/ralph/)
-- [Amp documentation](https://ampcode.com/manual)
+- [AMP documentation](https://ampcode.com/manual)
+- [Claude Code documentation](https://docs.anthropic.com/en/docs/claude-code)
+- [CODEX documentation](https://github.com/openai/codex)

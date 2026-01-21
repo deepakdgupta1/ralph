@@ -352,12 +352,12 @@ Focuses on identifying WHAT needs to be built and WHY (scope, features, user sto
 - **What it measures:** Total elapsed time to produce the PRD
 - **Better values:** Lower is better, relative to feature complexity
 - **Indicates:** Speed of requirements capture process
-- **Related metrics:** Number of Amp iterations to generate PRD
+- **Related metrics:** Number of agent iterations to generate PRD
 - **Recommended Action:** If consistently high, streamline clarifying questions or provide more context upfront.
 - **Priority:** Very High
 - **Priority Rationale:** Primary efficiency metric; simple timestamp tracking at PRD creation start/end.
 
-#### Number of Amp iterations to generate PRD
+#### Number of agent iterations to generate PRD
 
 - **What it measures:** Agent invocations needed to complete PRD
 - **Better values:** 1-2 iterations ideal; lower is better

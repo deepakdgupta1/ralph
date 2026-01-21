@@ -1,6 +1,11 @@
 #!/bin/bash
 # Ralph Wiggum - Long-running AI agent loop
 # Usage: ./ralph.sh [max_iterations]
+#
+# Supports multiple AI providers via RALPH_PROVIDER env var:
+#   amp (default), claude-code, antigravity, codex
+#
+# Example: RALPH_PROVIDER=claude-code ./ralph.sh 10
 
 set -e
 set -o pipefail
@@ -14,6 +19,11 @@ LAST_BRANCH_FILE="$SCRIPT_DIR/.last-branch"
 STATE_DIR="$SCRIPT_DIR/.agent"
 SCRATCHPAD_FILE="$STATE_DIR/scratchpad.md"
 LAST_SESSION_FILE="$STATE_DIR/last-session"
+
+# Load provider configuration
+# shellcheck source=config/ralph.config.sh
+source "$SCRIPT_DIR/config/ralph.config.sh"
+load_provider_config
 
 # ------------------------------------------------------------------
 # Config (override via env vars)
@@ -107,6 +117,7 @@ if [ ! -f "$PROGRESS_FILE" ]; then
 fi
 
 echo "Starting Ralph - Max iterations: $MAX_ITERATIONS"
+echo "Provider: $RALPH_PROVIDER_NAME ($RALPH_PROVIDER)"
 echo "Session ID: $RALPH_SESSION_ID"
 [ -n "$RALPH_PARENT_SESSION_ID" ] && echo "Parent Session ID: $RALPH_PARENT_SESSION_ID"
 echo "Mode: $RALPH_MODE (auto-approve=$RALPH_AUTO_APPROVE, humans-write-tests=$RALPH_HUMANS_WRITE_TESTS)"
@@ -123,17 +134,14 @@ for i in $(seq 1 $MAX_ITERATIONS); do
   echo "  Ralph Iteration $i of $MAX_ITERATIONS (Session: $RALPH_SESSION_ID)"
   echo "═══════════════════════════════════════════════════════"
 
-  AMP_STATUS=0
-  AMP_CMD=(amp --dangerously-allow-all)
-  if command -v timeout >/dev/null 2>&1; then
-    AMP_CMD=(timeout --preserve-status "${ITERATION_TIMEOUT_MINUTES}m" "${AMP_CMD[@]}")
-  fi
+  AGENT_STATUS=0
+  build_agent_command
 
   OUTPUT=$(
-    envsubst '$RALPH_SESSION_ID $RALPH_PARENT_SESSION_ID $RALPH_ITERATION $RALPH_MODE $RALPH_AUTO_APPROVE $RALPH_HUMANS_WRITE_TESTS' \
+    envsubst '$RALPH_SESSION_ID $RALPH_PARENT_SESSION_ID $RALPH_ITERATION $RALPH_MODE $RALPH_AUTO_APPROVE $RALPH_HUMANS_WRITE_TESTS $RALPH_PROVIDER $RALPH_PROVIDER_NAME' \
       < "$SCRIPT_DIR/prompt.md" \
-      | "${AMP_CMD[@]}" 2>&1 | tee /dev/stderr
-  ) || AMP_STATUS=$?
+      | "${AGENT_CMD[@]}" 2>&1 | tee /dev/stderr
+  ) || AGENT_STATUS=$?
 
   # ------------------------------------------------------------------
   # Circuit Breaker & Safety Checks
@@ -156,15 +164,15 @@ for i in $(seq 1 $MAX_ITERATIONS); do
   fi
 
   # 2. Error Burst Detection
-  if [ "$AMP_STATUS" -ne 0 ]; then
+  if [ "$AGENT_STATUS" -ne 0 ]; then
     CONSECUTIVE_ERROR_COUNT=$((CONSECUTIVE_ERROR_COUNT + 1))
-    echo "⚠️ Warning: amp exited with status $AMP_STATUS (Counter: $CONSECUTIVE_ERROR_COUNT/$MAX_CONSECUTIVE_ERRORS)"
+    echo "⚠️ Warning: $RALPH_PROVIDER_NAME exited with status $AGENT_STATUS (Counter: $CONSECUTIVE_ERROR_COUNT/$MAX_CONSECUTIVE_ERRORS)"
   else
     CONSECUTIVE_ERROR_COUNT=0
   fi
 
   if [ "$CONSECUTIVE_ERROR_COUNT" -ge "$MAX_CONSECUTIVE_ERRORS" ]; then
-    echo "❌ CIRCUIT BREAKER TRIPPED: $MAX_CONSECUTIVE_ERRORS consecutive amp errors."
+    echo "❌ CIRCUIT BREAKER TRIPPED: $MAX_CONSECUTIVE_ERRORS consecutive $RALPH_PROVIDER_NAME errors."
     echo "Stopping loop to avoid runaway failures."
     exit 1
   fi

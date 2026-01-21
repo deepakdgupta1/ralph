@@ -1,0 +1,59 @@
+{
+  "providers": {
+    "amp": {
+      "name": "AMP",
+      "command": "amp",
+      "defaultFlags": ["--dangerously-allow-all"],
+      "description": "Sourcegraph AMP - AI coding agent with full autonomy mode",
+      "threadUrlPattern": "https://ampcode.com/threads/${THREAD_ID}",
+      "threadIdEnv": "AMP_CURRENT_THREAD_ID",
+      "skillsDir": "~/.ralph/skills",
+      "documentation": "https://ampcode.com/manual",
+      "notes": "Uses --dangerously-allow-all for autonomous execution without confirmation prompts."
+    },
+    "claude-code": {
+      "name": "Claude Code",
+      "command": "claude",
+      "defaultFlags": ["--dangerously-skip-permissions"],
+      "description": "Anthropic Claude Code - Claude-powered coding assistant",
+      "threadUrlPattern": "",
+      "threadIdEnv": "",
+      "skillsDir": "~/.ralph/skills",
+      "documentation": "https://docs.anthropic.com/en/docs/claude-code",
+      "notes": "Uses --dangerously-skip-permissions for autonomous execution. Alternative: -p flag for print-only mode during testing."
+    },
+    "antigravity": {
+      "name": "Antigravity",
+      "command": "antigravity",
+      "defaultFlags": ["--auto-approve"],
+      "description": "Google DeepMind Antigravity - Advanced agentic coding assistant",
+      "threadUrlPattern": "",
+      "threadIdEnv": "",
+      "skillsDir": "~/.ralph/skills",
+      "documentation": "",
+      "notes": "Assumes --auto-approve flag for autonomous execution. Adjust if CLI differs."
+    },
+    "codex": {
+      "name": "CODEX",
+      "command": "codex",
+      "defaultFlags": ["--approval-mode", "full-auto"],
+      "description": "OpenAI CODEX CLI - GPT-powered coding agent",
+      "threadUrlPattern": "",
+      "threadIdEnv": "",
+      "skillsDir": "~/.ralph/skills",
+      "documentation": "https://github.com/openai/codex",
+      "notes": "Uses --approval-mode full-auto for autonomous execution without prompts."
+    }
+  },
+  "default": "amp",
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Ralph AI provider configuration. Add new providers by following the schema above.",
+    "flagRationale": {
+      "amp": "Official AMP documentation recommends --dangerously-allow-all for automated pipelines.",
+      "claude-code": "Claude Code CLI uses --dangerously-skip-permissions to bypass file/command confirmation prompts.",
+      "antigravity": "Assumed flag based on common patterns. Verify with actual CLI documentation.",
+      "codex": "OpenAI Codex CLI uses --approval-mode full-auto for fully autonomous operation."
+    }
+  }
+}

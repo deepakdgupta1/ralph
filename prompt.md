@@ -1,5 +1,5 @@
 # Ralph Agent Instructions
-> **Context**: Session `$RALPH_SESSION_ID` (Parent `$RALPH_PARENT_SESSION_ID`) | Iteration `$RALPH_ITERATION`  
+> **Provider**: `$RALPH_PROVIDER_NAME` | **Context**: Session `$RALPH_SESSION_ID` (Parent `$RALPH_PARENT_SESSION_ID`) | Iteration `$RALPH_ITERATION`  
 > **Mode**: `$RALPH_MODE` | **Auto-Approve**: `$RALPH_AUTO_APPROVE` | **Humans Write Tests**: `$RALPH_HUMANS_WRITE_TESTS`
 
 You are an autonomous coding agent working on a software project.
@@ -77,7 +77,7 @@ APPEND to progress.txt (never replace, always append):
 ```
 ## [Date/Time] - [Story ID]
 Session: $RALPH_SESSION_ID (Parent $RALPH_PARENT_SESSION_ID) (Iter $RALPH_ITERATION) (Mode $RALPH_MODE)
-Thread: https://ampcode.com/threads/$AMP_CURRENT_THREAD_ID
+Provider: $RALPH_PROVIDER_NAME
 - What was implemented
 - Files changed
 - **Learnings for future iterations:**
@@ -87,9 +87,9 @@ Thread: https://ampcode.com/threads/$AMP_CURRENT_THREAD_ID
 ---
 ```
 
-Include the thread URL so future iterations can use the `read_thread` tool to reference previous work if needed.
-
 The learnings section is critical - it helps future iterations avoid repeating mistakes and understand the codebase better.
+
+> **Note**: If your provider supports conversation threads, consider including a thread reference in your progress log entries.
 
 ## Consolidate Patterns
 

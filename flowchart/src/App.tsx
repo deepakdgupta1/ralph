@@ -40,7 +40,7 @@ const allSteps: { id: string; label: string; description: string; phase: Phase }
   { id: '2', label: 'Convert to prd.json', description: 'Break into small user stories', phase: 'setup' },
   { id: '3', label: 'Run ralph.sh', description: 'Starts the autonomous loop', phase: 'setup' },
   // Loop phase
-  { id: '4', label: 'Amp picks a story', description: 'Finds next passes: false', phase: 'loop' },
+  { id: '4', label: 'Agent picks a story', description: 'Finds next passes: false', phase: 'loop' },
   { id: '5', label: 'Implements it', description: 'Writes code, runs tests', phase: 'loop' },
   { id: '6', label: 'Commits changes', description: 'If tests pass', phase: 'loop' },
   { id: '7', label: 'Updates prd.json', description: 'Sets passes: true', phase: 'loop' },
@@ -81,11 +81,11 @@ iterations learn from this one.`,
 function CustomNode({ data }: { data: { title: string; description: string; phase: Phase } }) {
   const colors = phaseColors[data.phase];
   return (
-    <div 
+    <div
       className="custom-node"
-      style={{ 
-        backgroundColor: colors.bg, 
-        borderColor: colors.border 
+      style={{
+        backgroundColor: colors.bg,
+        borderColor: colors.border
       }}
     >
       <Handle type="target" position={Position.Top} id="top" />
@@ -106,7 +106,7 @@ function CustomNode({ data }: { data: { title: string; description: string; phas
 
 function NoteNode({ data }: { data: { content: string; color: { bg: string; border: string } } }) {
   return (
-    <div 
+    <div
       className="note-node"
       style={{
         backgroundColor: data.color.bg,
@@ -255,28 +255,28 @@ function App() {
           nodePositions.current[change.id] = change.position;
         }
       });
-      setNodes((nds) => applyNodeChanges(changes, nds));
+      setNodes((nds: Node[]) => applyNodeChanges(changes, nds));
     },
     [setNodes]
   );
 
   const onEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
-      setEdges((eds) => applyEdgeChanges(changes, eds));
+      setEdges((eds: Edge[]) => applyEdgeChanges(changes, eds));
     },
     [setEdges]
   );
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      setEdges((eds) => addEdge({ ...connection, animated: true, style: { stroke: '#222', strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: '#222' } }, eds));
+      setEdges((eds: Edge[]) => addEdge({ ...connection, animated: true, style: { stroke: '#222', strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: '#222' } }, eds));
     },
     [setEdges]
   );
 
   const onReconnect = useCallback(
     (oldEdge: Edge, newConnection: Connection) => {
-      setEdges((eds) => reconnectEdge(oldEdge, newConnection, eds));
+      setEdges((eds: Edge[]) => reconnectEdge(oldEdge, newConnection, eds));
     },
     [setEdges]
   );
@@ -325,7 +325,7 @@ function App() {
   return (
     <div className="app-container">
       <div className="header">
-        <h1>How Ralph Works with Amp</h1>
+        <h1>How Ralph Works</h1>
         <p>Autonomous AI agent loop for completing PRDs</p>
       </div>
       <div className="flow-container">
