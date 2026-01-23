@@ -1,0 +1,165 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Permission allowlists for sandboxed Ralph operation. Used when RALPH_SANDBOXED=1.",
+    "format": {
+      "allowed": "Operations permitted in sandboxed mode. Supports glob patterns.",
+      "blocked": "Operations explicitly denied. Takes precedence over allowed.",
+      "notes": "Provider-specific syntax may vary. See provider docs for exact patterns."
+    }
+  },
+
+  "bash": {
+    "_comment": "Shell commands allowed/blocked in sandboxed mode",
+    "allowed": [
+      "npm run lint",
+      "npm run lint:*",
+      "npm run test",
+      "npm run test:*",
+      "npm run build",
+      "npm run build:*",
+      "npm run check",
+      "npm run check:*",
+      "npm run typecheck",
+      "pnpm run lint",
+      "pnpm run lint:*",
+      "pnpm run test",
+      "pnpm run test:*",
+      "pnpm run build",
+      "pnpm run build:*",
+      "pnpm run check",
+      "pnpm run check:*",
+      "pnpm run typecheck",
+      "yarn lint",
+      "yarn lint:*",
+      "yarn test",
+      "yarn test:*",
+      "yarn build",
+      "yarn build:*",
+      "yarn check",
+      "yarn typecheck",
+      "cargo build",
+      "cargo build:*",
+      "cargo test",
+      "cargo test:*",
+      "cargo check",
+      "cargo clippy",
+      "go build",
+      "go build ./...",
+      "go test",
+      "go test ./...",
+      "go vet",
+      "make lint",
+      "make test",
+      "make build",
+      "make check",
+      "git status",
+      "git diff",
+      "git diff:*",
+      "git log",
+      "git log:*",
+      "git show",
+      "git show:*",
+      "git branch",
+      "git branch:*",
+      "cat *",
+      "head *",
+      "tail *",
+      "ls",
+      "ls:*",
+      "pwd",
+      "echo *",
+      "wc *",
+      "grep *",
+      "find *",
+      "jq *"
+    ],
+    "blocked": [
+      "rm",
+      "rm -rf",
+      "rm -r",
+      "rmdir",
+      "sudo",
+      "sudo:*",
+      "chmod",
+      "chown",
+      "curl",
+      "wget",
+      "nc",
+      "netcat",
+      "ssh",
+      "scp",
+      "rsync",
+      "git push",
+      "git push:*",
+      "git commit",
+      "git commit:*",
+      "git reset --hard",
+      "git clean",
+      "git checkout -f",
+      "npm publish",
+      "npm unpublish",
+      "yarn publish",
+      "pnpm publish",
+      "docker",
+      "docker:*",
+      "kubectl",
+      "kubectl:*",
+      "aws",
+      "gcloud",
+      "az",
+      "eval",
+      "exec",
+      "source",
+      ". *",
+      "bash -c",
+      "sh -c",
+      "env",
+      "export",
+      "unset",
+      "kill",
+      "killall",
+      "pkill"
+    ]
+  },
+
+  "file": {
+    "_comment": "File operation restrictions in sandboxed mode",
+    "allowed": [
+      "Read",
+      "Edit",
+      "Write"
+    ],
+    "blockedPaths": [
+      ".env",
+      ".env.*",
+      "*.pem",
+      "*.key",
+      "**/secrets/*",
+      "**/credentials/*",
+      "~/.ssh/*",
+      "~/.aws/*",
+      "~/.config/gcloud/*"
+    ]
+  },
+
+  "providerPatterns": {
+    "_comment": "Provider-specific allowedTools patterns derived from the above rules",
+    "claude-code": {
+      "pattern": "Read,Edit,Write,Bash(npm run *),Bash(pnpm run *),Bash(yarn *),Bash(cargo *),Bash(go *),Bash(make *),Bash(git status),Bash(git diff*),Bash(git log*),Bash(git show*),Bash(git branch*),Bash(cat *),Bash(ls*),Bash(pwd),Bash(grep *),Bash(find *),Bash(jq *)",
+      "notes": "Claude Code uses --allowedTools with comma-separated tool patterns. Bash() accepts glob patterns."
+    },
+    "amp": {
+      "pattern": "",
+      "notes": "AMP currently uses --dangerously-allow-all. Check ampcode.com/manual for sandboxed alternatives when available."
+    },
+    "antigravity": {
+      "pattern": "",
+      "notes": "Antigravity sandboxed mode not yet documented. Use with caution."
+    },
+    "codex": {
+      "pattern": "",
+      "notes": "Codex sandboxed mode not yet documented. Use with caution."
+    }
+  }
+}

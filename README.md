@@ -81,6 +81,16 @@ RALPH_PROVIDER=antigravity ./ralph.sh 10
 RALPH_PROVIDER=codex ./ralph.sh 10
 ```
 
+### Sandboxed Mode
+
+Run Ralph with restricted permissions for safer execution:
+
+```bash
+RALPH_SANDBOXED=1 ./ralph.sh 10
+```
+
+Permission allowlists are defined in `config/permissions.json`.
+
 ## Workflow
 
 ### 1. Create a PRD
@@ -111,6 +121,20 @@ This creates `prd.json` with user stories structured for autonomous execution.
 
 Default is 10 iterations.
 
+### Parallel Execution
+
+Run multiple independent stories in parallel:
+
+```bash
+# Run with 3 parallel workers
+./scripts/ralph-parallel.sh -w 3
+
+# Run specific stories only
+./scripts/ralph-parallel.sh -s "US-001,US-002"
+```
+
+> **Note**: Only use for stories without dependencies on each other.
+
 Ralph will:
 
 1. Create a feature branch (from PRD `branchName`)
@@ -135,7 +159,11 @@ Ralph will:
 | `progress.txt` | Append-only learnings for future iterations |
 | `skills/prd/` | Skill for generating PRDs |
 | `skills/ralph/` | Skill for converting PRDs to JSON |
+| `skills/dev-browser/` | Browser verification skill |
 | `flowchart/` | Interactive visualization of how Ralph works |
+| `hooks/` | Git hooks for quality enforcement |
+| `config/permissions.json` | Permission allowlists for sandboxed mode |
+| `scripts/ralph-parallel.sh` | Parallel execution script |
 
 ## Flowchart
 
@@ -210,6 +238,17 @@ Ralph only works if there are feedback loops:
 Frontend stories must include "Verify in browser using dev-browser skill" in acceptance criteria.
 Ralph will use the dev-browser skill to navigate to the page,
 interact with the UI, and confirm changes work.
+
+### Git Hooks
+
+Install hooks for deterministic quality enforcement:
+
+```bash
+./hooks/install.sh
+```
+
+Hooks block commits with deletions (use TRASH/), secrets, large diffs, and test edits.
+See `hooks/` for available hooks and customization.
 
 ### Stop Condition
 

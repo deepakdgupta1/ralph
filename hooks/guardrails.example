@@ -1,0 +1,127 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Ralph Guardrails Hook Example
+#
+# Blocks modifications to sensitive files. Run this before allowing edits
+# to enforce deterministic protection of critical paths.
+#
+# Usage:
+#   ./hooks/guardrails.example <file1> [file2] ...
+#   Returns exit code 1 if any file is protected.
+#
+# Integration:
+#   - Agent wrappers can call this before edit_file operations
+#   - CI can run this on PR changed files
+#   - Editor plugins can check before save
+
+if [ "$#" -lt 1 ]; then
+  echo "Usage: $0 <file> [file...]"
+  exit 1
+fi
+
+# Protected paths (customize per project)
+# Uses glob patterns matched against file paths
+PROTECTED_PATTERNS=(
+  # Security-critical
+  ".env"
+  ".env.*"
+  "*.pem"
+  "*.key"
+  "*.p12"
+  "*.pfx"
+  "*id_rsa*"
+  "*id_ed25519*"
+  "*credentials*"
+  "*secrets*"
+  
+  # Infrastructure (uncomment as needed)
+  # "terraform/*.tf"
+  # "k8s/*.yaml"
+  # ".github/workflows/*"
+  
+  # Lock files (optional - uncomment to protect)
+  # "package-lock.json"
+  # "yarn.lock"
+  # "pnpm-lock.yaml"
+  # "Cargo.lock"
+  # "go.sum"
+)
+
+# Additional patterns from environment (space-separated)
+if [ -n "${RALPH_PROTECTED_PATTERNS:-}" ]; then
+  IFS=' ' read -ra EXTRA_PATTERNS <<< "$RALPH_PROTECTED_PATTERNS"
+  PROTECTED_PATTERNS+=("${EXTRA_PATTERNS[@]}")
+fi
+
+# Files to always allow (overrides protection)
+ALLOWED_PATTERNS=(
+  "TRASH/*"
+)
+
+if [ -n "${RALPH_ALLOWED_PATTERNS:-}" ]; then
+  IFS=' ' read -ra EXTRA_ALLOWED <<< "$RALPH_ALLOWED_PATTERNS"
+  ALLOWED_PATTERNS+=("${EXTRA_ALLOWED[@]}")
+fi
+
+matches_pattern() {
+  local file="$1"
+  local pattern="$2"
+  
+  # Use bash pattern matching
+  case "$file" in
+    $pattern) return 0 ;;
+  esac
+  
+  # Also check basename
+  local base
+  base="$(basename "$file")"
+  case "$base" in
+    $pattern) return 0 ;;
+  esac
+  
+  return 1
+}
+
+is_allowed() {
+  local file="$1"
+  for pattern in "${ALLOWED_PATTERNS[@]}"; do
+    if matches_pattern "$file" "$pattern"; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+is_protected() {
+  local file="$1"
+  
+  # Check allowlist first
+  if is_allowed "$file"; then
+    return 1
+  fi
+  
+  for pattern in "${PROTECTED_PATTERNS[@]}"; do
+    if matches_pattern "$file" "$pattern"; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+BLOCKED=0
+
+for file in "$@"; do
+  if is_protected "$file"; then
+    echo "❌ BLOCKED: $file (protected by guardrails)"
+    BLOCKED=1
+  fi
+done
+
+if [ "$BLOCKED" -ne 0 ]; then
+  echo ""
+  echo "Override with: RALPH_HOOKS_BYPASS=1"
+  exit 1
+fi
+
+exit 0

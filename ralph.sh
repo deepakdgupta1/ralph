@@ -118,6 +118,11 @@ fi
 
 echo "Starting Ralph - Max iterations: $MAX_ITERATIONS"
 echo "Provider: $RALPH_PROVIDER_NAME ($RALPH_PROVIDER)"
+if [ "$RALPH_SANDBOXED" = "1" ]; then
+  echo "🔒 Sandboxed Mode: ENABLED (using permission allowlists)"
+else
+  echo "⚠️  Sandboxed Mode: DISABLED (full autonomy with dangerous permissions)"
+fi
 echo "Session ID: $RALPH_SESSION_ID"
 [ -n "$RALPH_PARENT_SESSION_ID" ] && echo "Parent Session ID: $RALPH_PARENT_SESSION_ID"
 echo "Mode: $RALPH_MODE (auto-approve=$RALPH_AUTO_APPROVE, humans-write-tests=$RALPH_HUMANS_WRITE_TESTS)"

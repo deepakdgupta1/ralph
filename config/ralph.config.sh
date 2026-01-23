@@ -10,15 +10,18 @@
 #   load_provider_config
 #
 # Environment Variables:
-#   RALPH_PROVIDER - Select provider (amp, claude-code, antigravity, codex)
-#                    Default: amp (for backward compatibility)
+#   RALPH_PROVIDER   - Select provider (amp, claude-code, antigravity, codex)
+#                      Default: amp (for backward compatibility)
+#   RALPH_SANDBOXED  - Set to 1 to use sandboxedFlags instead of defaultFlags
+#                      Default: 0 (full autonomy mode)
 #
 # Exported Variables (after load_provider_config):
 #   RALPH_PROVIDER_NAME  - Human-readable provider name
 #   RALPH_AGENT_CMD      - Base command to invoke the agent
-#   RALPH_AGENT_FLAGS    - Default flags for autonomous execution
+#   RALPH_AGENT_FLAGS    - Flags for execution (sandboxed or default)
 #   RALPH_SKILLS_DIR     - Unified skills directory
 #   RALPH_PROVIDER_DOCS  - Documentation URL
+#   RALPH_SANDBOXED      - Whether sandboxed mode is active (0 or 1)
 # =============================================================================
 
 set -e
@@ -51,6 +54,9 @@ load_provider_config() {
   default_provider="$(jq -r '.default // "amp"' "$PROVIDERS_FILE")"
   export RALPH_PROVIDER="${RALPH_PROVIDER:-$default_provider}"
 
+  # Sandboxed mode (default: 0 = full autonomy)
+  export RALPH_SANDBOXED="${RALPH_SANDBOXED:-0}"
+
   # Validate provider exists
   if ! jq -e ".providers[\"$RALPH_PROVIDER\"]" "$PROVIDERS_FILE" >/dev/null 2>&1; then
     local available
@@ -62,7 +68,14 @@ load_provider_config() {
   # Export provider configuration
   export RALPH_PROVIDER_NAME="$(jq -r ".providers[\"$RALPH_PROVIDER\"].name" "$PROVIDERS_FILE")"
   export RALPH_AGENT_CMD="$(jq -r ".providers[\"$RALPH_PROVIDER\"].command" "$PROVIDERS_FILE")"
-  export RALPH_AGENT_FLAGS="$(jq -r ".providers[\"$RALPH_PROVIDER\"].defaultFlags | join(\" \")" "$PROVIDERS_FILE")"
+  
+  # Select flags based on sandboxed mode
+  if [ "$RALPH_SANDBOXED" = "1" ]; then
+    export RALPH_AGENT_FLAGS="$(jq -r ".providers[\"$RALPH_PROVIDER\"].sandboxedFlags | join(\" \")" "$PROVIDERS_FILE")"
+  else
+    export RALPH_AGENT_FLAGS="$(jq -r ".providers[\"$RALPH_PROVIDER\"].defaultFlags | join(\" \")" "$PROVIDERS_FILE")"
+  fi
+  
   export RALPH_SKILLS_DIR="$(jq -r ".providers[\"$RALPH_PROVIDER\"].skillsDir // \"~/.ralph/skills\"" "$PROVIDERS_FILE")"
   export RALPH_PROVIDER_DOCS="$(jq -r ".providers[\"$RALPH_PROVIDER\"].documentation // \"\"" "$PROVIDERS_FILE")"
 
@@ -105,6 +118,11 @@ build_agent_command() {
 # -----------------------------------------------------------------------------
 print_provider_info() {
   echo "Provider: $RALPH_PROVIDER_NAME ($RALPH_PROVIDER)"
+  if [ "$RALPH_SANDBOXED" = "1" ]; then
+    echo "Mode: SANDBOXED (permission allowlists)"
+  else
+    echo "Mode: Full autonomy"
+  fi
   echo "Command: $RALPH_AGENT_CMD $RALPH_AGENT_FLAGS"
   echo "Skills: $RALPH_SKILLS_DIR"
   [ -n "$RALPH_PROVIDER_DOCS" ] && echo "Docs: $RALPH_PROVIDER_DOCS"

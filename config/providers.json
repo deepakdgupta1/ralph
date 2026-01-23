@@ -4,56 +4,77 @@
       "name": "AMP",
       "command": "amp",
       "defaultFlags": ["--dangerously-allow-all"],
+      "sandboxedFlags": [],
       "description": "Sourcegraph AMP - AI coding agent with full autonomy mode",
       "threadUrlPattern": "https://ampcode.com/threads/${THREAD_ID}",
       "threadIdEnv": "AMP_CURRENT_THREAD_ID",
       "skillsDir": "~/.ralph/skills",
       "documentation": "https://ampcode.com/manual",
-      "notes": "Uses --dangerously-allow-all for autonomous execution without confirmation prompts."
+      "notes": "Uses --dangerously-allow-all for autonomous execution without confirmation prompts.",
+      "sandboxedNotes": "AMP sandboxed mode runs without --dangerously-allow-all, requiring user approval for each action. Check ampcode.com/manual for allowlist options when available.",
+      "supportsParallel": true,
+      "parallelNotes": "Fully supports parallel execution. Each worker uses separate threads. Recommended for independent stories."
     },
     "claude-code": {
       "name": "Claude Code",
       "command": "claude",
       "defaultFlags": ["--dangerously-skip-permissions"],
+      "sandboxedFlags": ["--allowedTools", "Read,Edit,Write,Bash(npm run *),Bash(pnpm run *),Bash(yarn *),Bash(cargo *),Bash(go *),Bash(make *),Bash(git status),Bash(git diff*),Bash(git log*),Bash(git show*),Bash(git branch*),Bash(cat *),Bash(ls*),Bash(pwd),Bash(grep *),Bash(find *),Bash(jq *)"],
       "description": "Anthropic Claude Code - Claude-powered coding assistant",
       "threadUrlPattern": "",
       "threadIdEnv": "",
       "skillsDir": "~/.ralph/skills",
       "documentation": "https://docs.anthropic.com/en/docs/claude-code",
-      "notes": "Uses --dangerously-skip-permissions for autonomous execution. Alternative: -p flag for print-only mode during testing."
+      "notes": "Uses --dangerously-skip-permissions for autonomous execution. Alternative: -p flag for print-only mode during testing.",
+      "sandboxedNotes": "Uses --allowedTools to restrict to safe operations (lint, test, build, read-only git). See config/permissions.json for full allowlist.",
+      "supportsParallel": true,
+      "parallelNotes": "Supports parallel execution with separate sessions. Each worker runs in isolation. Monitor for rate limits with multiple instances."
     },
     "antigravity": {
       "name": "Antigravity",
       "command": "antigravity",
       "defaultFlags": ["--auto-approve"],
+      "sandboxedFlags": [],
       "description": "Google DeepMind Antigravity - Advanced agentic coding assistant",
       "threadUrlPattern": "",
       "threadIdEnv": "",
       "skillsDir": "~/.ralph/skills",
       "documentation": "",
-      "notes": "Assumes --auto-approve flag for autonomous execution. Adjust if CLI differs."
+      "notes": "Assumes --auto-approve flag for autonomous execution. Adjust if CLI differs.",
+      "sandboxedNotes": "Sandboxed mode not yet documented. Runs without --auto-approve, requiring manual approval.",
+      "supportsParallel": false,
+      "parallelNotes": "Parallel execution not yet verified. CLI behavior with multiple instances unknown. Use sequential mode."
     },
     "codex": {
       "name": "CODEX",
       "command": "codex",
       "defaultFlags": ["--approval-mode", "full-auto"],
+      "sandboxedFlags": ["--approval-mode", "suggest"],
       "description": "OpenAI CODEX CLI - GPT-powered coding agent",
       "threadUrlPattern": "",
       "threadIdEnv": "",
       "skillsDir": "~/.ralph/skills",
       "documentation": "https://github.com/openai/codex",
-      "notes": "Uses --approval-mode full-auto for autonomous execution without prompts."
+      "notes": "Uses --approval-mode full-auto for autonomous execution without prompts.",
+      "sandboxedNotes": "Uses --approval-mode suggest to require approval for file writes and commands.",
+      "supportsParallel": true,
+      "parallelNotes": "Supports parallel execution. Be aware of API rate limits when running multiple workers."
     }
   },
   "default": "amp",
   "_meta": {
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Ralph AI provider configuration. Add new providers by following the schema above.",
     "flagRationale": {
       "amp": "Official AMP documentation recommends --dangerously-allow-all for automated pipelines.",
       "claude-code": "Claude Code CLI uses --dangerously-skip-permissions to bypass file/command confirmation prompts.",
       "antigravity": "Assumed flag based on common patterns. Verify with actual CLI documentation.",
       "codex": "OpenAI Codex CLI uses --approval-mode full-auto for fully autonomous operation."
+    },
+    "sandboxedModeInfo": {
+      "description": "Sandboxed mode (RALPH_SANDBOXED=1) uses sandboxedFlags instead of defaultFlags for safer operation.",
+      "permissionsFile": "config/permissions.json contains the detailed allowlist/blocklist rules.",
+      "recommendation": "Use sandboxed mode for untrusted codebases or when testing new PRDs."
     }
   }
 }

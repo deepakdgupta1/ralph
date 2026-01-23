@@ -15,6 +15,12 @@ cd flowchart && npm run build
 
 # Run Ralph (from your project that has prd.json)
 ./ralph.sh [max_iterations]
+
+# Sandboxed mode (permission-restricted)
+RALPH_SANDBOXED=1 ./ralph.sh 10
+
+# Parallel execution
+./scripts/ralph-parallel.sh -w 3
 ```
 
 ## Key Files
@@ -25,6 +31,10 @@ cd flowchart && npm run build
 - `config/ralph.config.sh` - Configuration loader script
 - `prd.json.example` - Example PRD format
 - `flowchart/` - Interactive React Flow diagram explaining how Ralph works
+- `config/permissions.json` - Permission allowlists for sandboxed mode
+- `scripts/ralph-parallel.sh` - Parallel execution orchestrator
+- `skills/dev-browser/` - Browser verification skill
+- `skills/README.md` - Skills documentation
 
 ## Flowchart
 
@@ -47,6 +57,28 @@ npm run dev
 - Provider selection via `RALPH_PROVIDER` env var (default: `amp`)
 - Git safety hooks live in `hooks/` (install with `./hooks/install.sh`, use `./hooks/safe-rm` for TRASH deletes)
 - Always update AGENTS.md with discovered patterns for future iterations
+- Sandboxed mode available via `RALPH_SANDBOXED=1` for safer operation
+- Parallel execution available for independent stories via `scripts/ralph-parallel.sh`
+- Use subagents for exploration to preserve main context (documented in prompt.md)
+
+## Hooks System
+
+Deterministic quality enforcement (unlike AGENTS.md which is advisory). Install with `./hooks/install.sh`.
+
+**Git Hooks (auto-installed):**
+- `pre-commit` - Blocks deletions (use TRASH/), secrets, large diffs, test edits
+- `pre-push` - Enforces branch matches `prd.json.branchName`
+
+**Utilities:**
+- `safe-rm` - Move files to TRASH/ instead of deleting
+
+**Example hooks (copy and customize):**
+- `post-edit.example` - Auto-format files after edit
+- `guardrails.example` - Block edits to sensitive files
+
+**Key env vars:**
+- `RALPH_HOOKS_BYPASS=1` - Emergency override for all hooks
+- `RALPH_TRASH_DIR` - Custom trash directory (default: `TRASH/`)
 
 ## Documentation Conventions
 

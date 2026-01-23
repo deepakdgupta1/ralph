@@ -42,11 +42,26 @@ Use these markers in your response:
 4. Select the **highest priority** story where `passes: false`.
 
 ### 2. A-lign (Planning)
-5. Create a mini-plan for the story.
+5. **Complexity Check**: Before planning, assess story complexity:
+   - **Simple**: Single file, clear scope, familiar code → proceed with mini-plan
+   - **Complex**: Multi-file changes, unfamiliar code, architectural impact, or unclear approach → use Extended Planning
+
+6. Create a mini-plan for the story.
 	   - Identifying files to touch.
 	   - Identifying **Verification** (Critical: How will you prove it works?).
-6. *Self-Correction*: Does this plan match the User Story Acceptance Criteria exactly?
-7. **Definition of Ready (DOR)**: If acceptance criteria are not verifiable, do not implement. Ask questions or mark blocked.
+7. *Self-Correction*: Does this plan match the User Story Acceptance Criteria exactly?
+8. **Definition of Ready (DOR)**: If acceptance criteria are not verifiable, do not implement. Ask questions or mark blocked.
+
+#### Extended Planning for Complex Stories
+
+When a story is complex, use **Plan Mode** (explore without making changes) before implementing:
+
+1. **Explore**: Read relevant files, trace code paths, understand dependencies. Make NO edits.
+2. **Plan**: Document a detailed plan with specific files, functions, and change descriptions.
+3. **Validate**: Confirm the plan addresses all acceptance criteria and won't break existing functionality.
+4. **Approve**: Output `[PLAN]` and wait for approval before any implementation.
+
+**Skip extended planning when**: Change is isolated, pattern is well-established, or you've done similar work in this codebase.
 
 **Approval Gate (P0)**:
 - If `$RALPH_AUTO_APPROVE` is `1`, proceed after you output `[PLAN]`.
@@ -104,6 +119,20 @@ If you discover a **reusable pattern** that future iterations should know, add i
 
 Only add patterns that are **general and reusable**, not story-specific details.
 
+## Anti-Patterns
+
+If you encounter an approach that **failed or caused problems**, document it in the `## Anti-Patterns` section at the TOP of progress.txt (create it if it doesn't exist, place it after Codebase Patterns). This helps future iterations avoid repeating mistakes:
+
+```
+## Anti-Patterns
+- **[Pattern Name]**: [What went wrong] → [How to avoid]
+- Example: **Direct DOM manipulation**: Broke React state sync → Use refs or state instead
+- Example: **Inline SQL in handlers**: SQL injection vulnerability → Use parameterized queries
+- Example: **Skipping migration rollback**: Blocked deployment recovery → Always define down() migrations
+```
+
+Only add anti-patterns that are **general and reusable**, not story-specific errors.
+
 ## Update AGENTS.md Files
 
 Before committing, check if any edited files have learnings worth preserving in nearby AGENTS.md files:
@@ -130,6 +159,23 @@ Before committing, check if any edited files have learnings worth preserving in 
 
 Only update AGENTS.md if you have **genuinely reusable knowledge** that would help future work in that directory.
 
+### AGENTS.md Maintenance
+
+Keep AGENTS.md files concise. Bloated files cause instructions to be ignored.
+
+**Prune regularly:**
+- Remove instructions Claude already follows by default (standard conventions)
+- Convert frequently-violated rules to hooks (deterministic enforcement)
+- Delete outdated patterns that no longer apply
+- Consolidate redundant entries
+
+**Signs AGENTS.md needs pruning:**
+- Claude ignores rules despite them being documented
+- The file exceeds ~50 lines of guidance
+- Multiple rules say similar things differently
+
+If a rule is critical, add emphasis ("IMPORTANT", "MUST", "NEVER") sparingly.
+
 ## Quality Requirements
 
 - ALL commits must pass your project's quality checks (typecheck, lint, test)
@@ -147,6 +193,31 @@ For any story that changes UI, you MUST verify it works in the browser:
 4. Take a screenshot if helpful for the progress log
 
 A frontend story is NOT complete until browser verification passes.
+
+## Subagent Delegation
+
+Use subagents for exploration tasks to preserve main context for implementation.
+
+**When to use subagents (D-iscuss phase):**
+- Codebase exploration: "Search for all usages of X and summarize patterns"
+- Code review: "Analyze this module's architecture and report key interfaces"
+- Research: "Find how authentication is handled across the codebase"
+
+**When NOT to use subagents:**
+- Simple file reads (use direct read)
+- Direct implementation (you need full context)
+- Small, focused lookups
+
+**Example delegation prompts:**
+```
+"Explore the authentication system. Find: 1) where tokens are validated, 
+2) middleware patterns used, 3) error handling approach. Report back a summary."
+
+"Review the database layer. Identify: query patterns, transaction handling, 
+and migration conventions. Summarize in <100 words."
+```
+
+**How it works:** Subagents run in separate context windows and return summaries. Your main context stays clean for implementation. Delegate broad exploration, keep focused implementation.
 
 ## Stop Condition
 

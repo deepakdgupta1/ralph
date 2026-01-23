@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Ralph Post-Edit Hook Example
+# 
+# This hook runs after file edits to auto-format specific file types.
+# Unlike git hooks, this is invoked by the agent or editor integration.
+#
+# Usage:
+#   ./hooks/post-edit.example <file1> [file2] ...
+#
+# Integration:
+#   - Editor plugins can call this after save
+#   - Agent wrappers can call this after edit_file operations
+#   - CI can run this on changed files
+
+if [ "$#" -lt 1 ]; then
+  echo "Usage: $0 <file> [file...]"
+  exit 1
+fi
+
+# Configurable formatters (customize per project)
+FORMAT_JS="${RALPH_FORMAT_JS:-prettier --write}"
+FORMAT_TS="${RALPH_FORMAT_TS:-prettier --write}"
+FORMAT_PY="${RALPH_FORMAT_PY:-black}"
+FORMAT_GO="${RALPH_FORMAT_GO:-gofmt -w}"
+FORMAT_RS="${RALPH_FORMAT_RS:-rustfmt}"
+FORMAT_JSON="${RALPH_FORMAT_JSON:-prettier --write}"
+FORMAT_MD="${RALPH_FORMAT_MD:-prettier --write}"
+FORMAT_SH="${RALPH_FORMAT_SH:-shfmt -w}"
+
+format_file() {
+  local file="$1"
+  
+  if [ ! -f "$file" ]; then
+    echo "Skipping missing file: $file"
+    return 0
+  fi
+
+  case "$file" in
+    *.js|*.jsx)
+      if command -v prettier &>/dev/null; then
+        $FORMAT_JS "$file" 2>/dev/null && echo "Formatted (JS): $file"
+      fi
+      ;;
+    *.ts|*.tsx)
+      if command -v prettier &>/dev/null; then
+        $FORMAT_TS "$file" 2>/dev/null && echo "Formatted (TS): $file"
+      fi
+      ;;
+    *.py)
+      if command -v black &>/dev/null; then
+        $FORMAT_PY "$file" 2>/dev/null && echo "Formatted (Python): $file"
+      elif command -v ruff &>/dev/null; then
+        ruff format "$file" 2>/dev/null && echo "Formatted (Python/ruff): $file"
+      fi
+      ;;
+    *.go)
+      if command -v gofmt &>/dev/null; then
+        $FORMAT_GO "$file" 2>/dev/null && echo "Formatted (Go): $file"
+      fi
+      ;;
+    *.rs)
+      if command -v rustfmt &>/dev/null; then
+        $FORMAT_RS "$file" 2>/dev/null && echo "Formatted (Rust): $file"
+      fi
+      ;;
+    *.json)
+      if command -v prettier &>/dev/null; then
+        $FORMAT_JSON "$file" 2>/dev/null && echo "Formatted (JSON): $file"
+      fi
+      ;;
+    *.md)
+      if command -v prettier &>/dev/null; then
+        $FORMAT_MD "$file" 2>/dev/null && echo "Formatted (Markdown): $file"
+      fi
+      ;;
+    *.sh|*.bash)
+      if command -v shfmt &>/dev/null; then
+        $FORMAT_SH "$file" 2>/dev/null && echo "Formatted (Shell): $file"
+      fi
+      ;;
+    *)
+      # Unknown file type, skip silently
+      ;;
+  esac
+}
+
+for file in "$@"; do
+  format_file "$file"
+done
